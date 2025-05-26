@@ -197,3 +197,292 @@ FROM posts
 WHERE DATE_PART('year', post_date::DATE) = 2021 
 GROUP BY user_id
 HAVING COUNT(post_id)>1;
+-- Advanced SQL
+-- leeson 302 SQL CTE vs. SUBQUERY
+-- 1. SQL Tutorial Lesson: Top-Selling Artists
+WITH max_rev_per_genre AS(
+SELECT genre, MAX(concert_revenue/number_of_members) AS revenue_per_member
+FROM concerts
+GROUP BY genre
+)
+SELECT artist_name, concert_revenue,
+      genre, number_of_members,
+      (concert_revenue/number_of_members) AS revenue_per_member
+FROM concerts
+WHERE concert_revenue/number_of_members IN (
+SELECT revenue_per_member FROM max_rev_per_genre
+WHERE concerts.genre=max_rev_per_genre.genre
+)
+ORDER BY revenue_per_member DESC, genre
+-- 2. Supercloud Customer
+WITH supercloud_cust AS (
+  SELECT 
+    customers.customer_id, 
+    COUNT(DISTINCT products.product_category) AS product_count
+  FROM customer_contracts AS customers
+  INNER JOIN products 
+    ON customers.product_id = products.product_id
+  GROUP BY customers.customer_id
+)
+
+SELECT customer_id
+FROM supercloud_cust
+WHERE product_count = (
+  SELECT COUNT(DISTINCT product_category) FROM products
+);
+-- 3. Swapped Food Delivery
+WITH order_counts AS (
+  SELECT COUNT(order_id) AS total_orders 
+  FROM orders
+)
+
+SELECT
+  CASE
+    WHEN order_id % 2 != 0 AND order_id != total_orders THEN order_id + 1
+    WHEN order_id % 2 != 0 AND order_id = total_orders THEN order_id
+    ELSE order_id - 1
+  END AS corrected_order_id,
+  item
+FROM orders
+CROSS JOIN order_counts
+ORDER BY corrected_order_id;
+-- leeson 303 SQL Window Functions
+-- 1. SQL Card Launch Success
+WITH card_launch AS (
+  SELECT 
+    card_name,
+    issued_amount,
+    MAKE_DATE(issue_year, issue_month, 1) AS issue_date,
+    MIN(MAKE_DATE(issue_year, issue_month, 1)) OVER (
+      PARTITION BY card_name) AS launch_date
+  FROM monthly_cards_issued
+)
+SELECT 
+  card_name, 
+  issued_amount
+FROM card_launch
+WHERE issue_date = launch_date
+ORDER BY issued_amount DESC;
+-- leeson 304 SQL Ranking
+-- 1. SQL Top 5 Artists
+WITH top_10_cte AS (
+  SELECT 
+    artists.artist_name,
+    DENSE_RANK() OVER (
+      ORDER BY COUNT(songs.song_id) DESC) AS artist_rank
+  FROM artists
+  INNER JOIN songs
+    ON artists.artist_id = songs.artist_id
+  INNER JOIN global_song_rank AS ranking
+    ON songs.song_id = ranking.song_id
+  WHERE ranking.rank <= 10
+  GROUP BY artists.artist_name
+)
+
+SELECT artist_name, artist_rank
+FROM top_10_cte
+WHERE artist_rank <= 5;
+-- 2. Histogram of Users and Purchases
+WITH latest_transactions_cte AS (
+  SELECT 
+    transaction_date, 
+    user_id, 
+    product_id, 
+    RANK() OVER (
+      PARTITION BY user_id 
+      ORDER BY transaction_date DESC) AS transaction_rank 
+  FROM user_transactions) 
+  
+SELECT 
+  transaction_date, 
+  user_id,
+  COUNT(product_id) AS purchase_count
+FROM latest_transactions_cte
+WHERE transaction_rank = 1 
+GROUP BY transaction_date, user_id
+ORDER BY transaction_date;
+-- 3. Odd and Even Measurements
+WITH ranked_measurements AS (
+  SELECT 
+    CAST(measurement_time AS DATE) AS measurement_day, 
+    measurement_value, 
+    ROW_NUMBER() OVER (
+      PARTITION BY CAST(measurement_time AS DATE) 
+      ORDER BY measurement_time) AS measurement_num 
+  FROM measurements
+) 
+
+SELECT 
+  measurement_day, 
+  SUM(measurement_value) FILTER (WHERE measurement_num % 2 != 0) AS odd_sum, 
+  SUM(measurement_value) FILTER (WHERE measurement_num % 2 = 0) AS even_sum 
+FROM ranked_measurements
+GROUP BY measurement_day;
+-- leeson 305 SQL  LEAD & LAG
+-- 1. SQL Tutorial Lesson: Stock Performance
+WITH per_month AS 
+(SELECT DISTINCT DATE_TRUNC('month', date) as date,
+MIN(open) OVER(PARTITION BY DATE_TRUNC('month', date) 
+ORDER BY EXTRACT('day' FROM date)) AS open_month,
+MAX(close) OVER(PARTITION BY DATE_TRUNC('month', date) 
+ORDER BY EXTRACT('day' FROM date)) AS close_month
+from stock_prices
+ORDER BY date ),
+ logs AS (SELECT *,
+LAG(close_month,1) OVER(ORDER BY date ) AS prev_close,
+LAG(close_month,3) OVER(ORDER BY date ) AS m3_close
+FROM per_month) 
+SELECT date,close_month-prev_close as consec_month,
+close_month-m3_close as months3_prior
+FROM logs
+-- 2. SQL Y-on-Y Growth Rate
+WITH yearly_spend_cte AS (
+  SELECT 
+    EXTRACT(YEAR FROM transaction_date) AS year,
+    product_id,
+    spend AS curr_year_spend,
+    LAG(spend) OVER (
+      PARTITION BY product_id 
+      ORDER BY 
+        product_id, 
+        EXTRACT(YEAR FROM transaction_date)) AS prev_year_spend 
+  FROM user_transactions
+)
+
+SELECT 
+  year,
+  product_id, 
+  curr_year_spend, 
+  prev_year_spend, 
+  ROUND(100 * 
+    (curr_year_spend - prev_year_spend)
+    / prev_year_spend
+  , 2) AS yoy_rate 
+FROM yearly_spend_cte;
+-- 3. SQL Y-on-Y Growth Rate
+WITH yearly_spend_cte AS (
+  SELECT 
+    EXTRACT(YEAR FROM transaction_date) AS year,
+    product_id,
+    spend AS curr_year_spend,
+    LAG(spend) OVER (
+      PARTITION BY product_id 
+      ORDER BY 
+        product_id, 
+        EXTRACT(YEAR FROM transaction_date)) AS prev_year_spend 
+  FROM user_transactions
+)
+
+SELECT 
+  year,
+  product_id, 
+  curr_year_spend, 
+  prev_year_spend, 
+  ROUND(100 * 
+    (curr_year_spend - prev_year_spend)
+    / prev_year_spend
+  , 2) AS yoy_rate 
+FROM yearly_spend_cte;
+-- leeson 307  SQL UNION
+-- 1. Maximize Prime Item Inventory
+WITH summary AS (
+  SELECT 
+    SUM(square_footage) FILTER (WHERE item_type = 'prime_eligible') AS prime_sq_ft,
+    COUNT(item_id) FILTER (WHERE item_type = 'prime_eligible') AS prime_item_count,
+    SUM(square_footage) FILTER (WHERE item_type = 'not_prime') AS not_prime_sq_ft,
+    COUNT(item_id) FILTER (WHERE item_type = 'not_prime') AS not_prime_item_count
+  FROM inventory
+),
+prime_occupied_area AS (
+  SELECT FLOOR(500000/prime_sq_ft)*prime_sq_ft AS max_prime_area
+  FROM summary
+)
+
+SELECT 
+  'prime_eligible' AS item_type,
+  FLOOR(500000/prime_sq_ft)*prime_item_count AS item_count
+FROM summary
+
+UNION ALL
+
+SELECT 
+  'not_prime' AS item_type,
+  FLOOR((500000-(SELECT max_prime_area FROM prime_occupied_area)) 
+    / not_prime_sq_ft) * not_prime_item_count AS item_count
+FROM summary;
+-- 2. Page With No Likes
+SELECT p.page_id
+FROM pages p
+LEFT JOIN page_likes pl ON p.page_id = pl.page_id
+WHERE pl.page_id IS NULL
+ORDER BY p.page_id ASC;
+-- leeson 311 SQL STRING Functions
+-- 1. SQL LOWER Practice Exercise
+SELECT *
+FROM customers
+WHERE LOWER(customer_name) LIKE '%son'
+  AND gender = 'Male'
+  AND age = 20;
+-- 2. Pharmacy Analytics (Part 3)
+WITH drug_sales AS (
+  SELECT 
+    manufacturer, 
+    SUM(total_sales) as sales 
+  FROM pharmacy_sales 
+  GROUP BY manufacturer
+) 
+
+SELECT 
+  manufacturer, 
+  ('$' || ROUND(sales / 1000000) || ' million') AS sales_mil 
+FROM drug_sales 
+ORDER BY sales DESC, manufacturer;
+-- leeson 312 Instacart SQL Data Analytics Case Study
+-- 1. Instacart Exploration – Case Study Checkpoint #1
+SELECT prior.product_id, product_name, department, aisle
+FROM ic_products prod
+  JOIN ic_order_products_prior prior
+    ON prod.product_id = prior.product_id
+  JOIN ic_departments dept
+    ON prod.department_id = dept.department_id
+  JOIN ic_aisles aisle
+    ON prod.aisle_id = aisle.aisle_id
+GROUP BY 1,2,3,4
+ORDER BY count(1) DESC
+LIMIT 5;
+-- 2. Instacart Reorders – Case Study Checkpoint #2
+SELECT
+      prod.product_id,
+      prod.product_name,
+      prod.aisle_id,
+      prod.department_id,
+      dept.department,
+      aisles.aisle,
+      SUM(op_prior.reordered) AS prior_reorders,
+      SUM(op_curr.reordered) AS current_reorders
+  FROM
+      ic_products AS prod
+  JOIN
+      Ic_order_products_prior AS op_prior
+      ON prod.product_id = op_prior.product_id
+  JOIN
+      ic_order_products_curr AS op_curr
+      ON prod.product_id = op_curr.product_id
+  JOIN
+      ic_departments AS dept
+      ON prod.department_id = dept.department_id
+  JOIN
+      ic_aisles AS aisles
+      ON prod.aisle_id = aisles.aisle_id
+  GROUP BY
+      prod.product_id,
+      prod.product_name,
+      prod.aisle_id,
+      prod.department_id,
+      dept.department,
+      aisles.aisle
+  HAVING
+      SUM(op_prior.reordered) < 10
+      AND SUM(op_curr.reordered) >= 10
+  ORDER BY
+      current_reorders DESC;
