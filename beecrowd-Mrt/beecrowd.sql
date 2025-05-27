@@ -81,21 +81,6 @@ WHERE
     c1.available = TRUE AND c2.available = TRUE
 ORDER BY 
     c1.id;
--- lesson 3481 leven 2 Classifying a Tree
- WITH all_nodes AS (
-    SELECT node_id FROM nodes
-    UNION
-    SELECT pointer FROM nodes WHERE pointer IS NOT NULL
-)
-SELECT n.node_id,
-    CASE
-        WHEN NOT EXISTS (SELECT 1 FROM nodes WHERE pointer = n.node_id) THEN 'ROOT'
-        WHEN EXISTS (SELECT 1 FROM nodes WHERE node_id = n.node_id AND pointer IS NOT NULL) THEN 'INNER'
-        ELSE 'LEAF'
-    END AS type
-FROM all_nodes n
-WHERE n.node_id IS NOT NULL
-ORDER BY n.node_id ;
 -- lesson 3482 leven 2 Seguidores
 SELECT 
     LEAST(u1.user_name, u2.user_name) AS u1_name,
