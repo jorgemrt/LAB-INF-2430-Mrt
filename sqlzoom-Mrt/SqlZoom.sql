@@ -1,19 +1,4 @@
---Tutoriales: Aprende SQL paso a paso
-
---0 SELECCIONE CONCEPTOS BASICOS
-
-    ----Ejercicio 1
-    --Modificarlo para mostrar la población de Alemania  
-    --CODIGO :
-    SELECT population FROM world
-     WHERE name ='Germany'
-    ----Ejercicio 2
-    --Mostrar el nombre y el población para 'Suecia', 'Noruega' y 'Dinamarca'. 
-    --CODIGO :
-    SELECT name, population FROM world
-     WHERE name IN ('Sweden', 'Norway', 'denmark');
-    ----Ejercicio 3
-    --Modificarlo para mostrar el país y el área para países con un área entre 200,000 y 250,000.
+--0 Modificarlo para mostrar el país y el área para países con un área entre 200,000 y 250,000.
     --CODIGO :
     SELECT name, area FROM world
      WHERE area BETWEEN 200000 AND 250000
