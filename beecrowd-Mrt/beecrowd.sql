@@ -1,14 +1,61 @@
 -- lesson 2603 leven 1 Customer Addres 
+SELECT name, street
+FROM customers
+WHERE city = 'Porto Alegre';
 -- lesson 2607 leven 1 Providers'city in Alphabetical Orden
+SELECT DISTINCT city
+FROM providers
+ORDER BY city ASC;
 -- lesson 2608 leven 1 Higher and Lower Price
+SELECT 
+    MAX(price) AS price,
+    MIN(price) AS price
+FROM products;
 -- lesson 2615 leven 1 Expanding the Business
+SELECT DISTINCT city
+FROM customers
+ORDER BY city;
 -- lesson 2617 leven 1 Provider Ajax SA
+SELECT p.name AS name, pr.name AS name
+FROM products p
+JOIN providers pr ON p.id_providers = pr.id
+WHERE pr.name = 'Ajax SA';
 -- lesson 2622 leven 1 Legal Person 
+SELECT c.name
+FROM customers c
+JOIN legal_person lp ON c.id = lp.id_customers;
 -- lesson 2744 leven 1 Paswords
+SELECT id,password,
+    MD5(password) AS MD5
+FROM account;
 -- lesson 2746 leven 1 viruses
+SELECT 
+    REPLACE(name, 'H1', 'X') AS name
+FROM virus;
 -- lesson 2604 leven 2 Under 10 or Greater Than 100
+SELECT id, name
+FROM products
+WHERE price < 10 OR price > 100
+ORDER BY id;
 -- lesson 2613 leven 2 Cheap Movies 
+SELECT m.id, m.name
+FROM movies m
+JOIN prices p ON m.id_prices = p.id
+WHERE p.value < 2.00;
 -- lesson 2619 leven 2 Super Luxury
+SELECT 
+    prod.name AS name,
+    prov.name AS name,
+    prod.price AS price
+FROM 
+    products prod
+JOIN 
+    providers prov ON prod.id_providers = prov.id
+JOIN 
+    categories cat ON prod.id_categories = cat.id
+WHERE 
+    prod.price > 1000
+    AND cat.name = 'Super Luxury';
 -- lesson 2994 leven 2 How much earn a Doctor?
 -- lesson 3480 leven 2 Adjacent Chairs
 -- lesson 3481 leven 2 Classifying a Tree
