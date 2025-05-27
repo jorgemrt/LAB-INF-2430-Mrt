@@ -57,19 +57,143 @@ WHERE
     prod.price > 1000
     AND cat.name = 'Super Luxury';
 -- lesson 2994 leven 2 How much earn a Doctor?
+SELECT 
+    d.name AS name,
+    ROUND(SUM(a.hours * 150 * (1 + ws.bonus/100)), 1) AS salary
+FROM 
+    doctors d
+JOIN 
+    attendances a ON d.id = a.id_doctor
+JOIN 
+    work_shifts ws ON a.id_work_shift = ws.id
+GROUP BY 
+    d.id, d.name
+ORDER BY 
+    salary DESC;
 -- lesson 3480 leven 2 Adjacent Chairs
+SELECT 
+    c1.queue,c1.id AS let,c2.id AS rig
+FROM 
+    chairs c1
+JOIN 
+    chairs c2 ON c1.queue = c2.queue AND c1.id + 1 = c2.id
+WHERE 
+    c1.available = TRUE AND c2.available = TRUE
+ORDER BY 
+    c1.id;
 -- lesson 3481 leven 2 Classifying a Tree
--- lesson 3482 leven 2 Followers
+WITH all_nodes AS (
+    SELECT node_id FROM nodes
+    UNION
+    SELECT pointer FROM nodes WHERE pointer IS NOT NULL
+)
+SELECT n.node_id,
+    CASE
+        WHEN NOT EXISTS (SELECT 1 FROM nodes WHERE pointer = n.node_id) THEN 'ROOT'
+        WHEN EXISTS (SELECT 1 FROM nodes WHERE node_id = n.node_id AND pointer IS NOT NULL) THEN 'INNER'
+        ELSE 'LEAF'
+    END AS type
+FROM all_nodes n
+WHERE n.node_id IS NOT NULL
+ORDER BY n.node_id;
+-- lesson 3482 leven 2 Seguidores
+SELECT 
+    LEAST(u1.user_name, u2.user_name) AS u1_name,
+    GREATEST(u1.user_name, u2.user_name) AS u2_name
+FROM 
+    followers f1
+JOIN 
+    followers f2 ON f1.user_id_fk = f2.following_user_id_fk
+                AND f1.following_user_id_fk = f2.user_id_fk
+JOIN 
+    users u1 ON f1.user_id_fk = u1.user_id
+JOIN 
+    users u2 ON f1.following_user_id_fk = u2.user_id
+WHERE 
+    f1.user_id_fk < f2.user_id_fk
+ORDER BY 
+    u1.user_id;
 -- lesson 3483 leven 2 econd Largest and Smallest
+(
+    SELECT city_name, population
+    FROM cities
+    ORDER BY population DESC
+    LIMIT 1 OFFSET 1
+)
+UNION ALL
+(
+    SELECT city_name, population
+    FROM cities
+    ORDER BY population ASC
+    LIMIT 1 OFFSET 1
+);
 -- lesson 2606 leven 3 Categories
+SELECT p.id, p.name
+FROM products p
+JOIN categories c ON p.id_categories = c.id
+WHERE c.name LIKE 'super%';
 -- lesson 2610 leven 3 Average Value of Produscts
+SELECT ROUND(AVG(price), 2) AS price
+FROM products;
 -- lesson 2618 leven 3 imported products
+SELECT 
+    p.name AS name,
+    pr.name AS name,
+    c.name AS name
+FROM 
+    products p
+JOIN 
+    providers pr ON p.id_providers = pr.id
+JOIN 
+    categories c ON p.id_categories = c.id
+WHERE 
+    pr.name = 'Sansul SA'
+    AND c.name = 'Imported';
 -- lesson 2620 leven 3 Orders in First Half
+SELECT 
+    c.name,
+    o.id
+FROM 
+    customers c
+JOIN 
+    orders o ON c.id = o.id_customers
+WHERE 
+    o.orders_date BETWEEN '2016-01-01' AND '2016-06-30'
+ORDER BY 
+    o.id;
 -- lesson 2621 leven 3 Amounts between 10 and 20
+SELECT p.name
+FROM products p
+JOIN providers pr ON p.id_providers = pr.id
+WHERE p.amount BETWEEN 10 AND 20
+AND pr.name LIKE 'P%';
 -- lesson 2624 leven 3 Number id of cities per customers
+SELECT COUNT(DISTINCT city) AS count
+FROM customers;
 -- lesson 2743 leven 3 Number of characters
+SELECT 
+    name,
+    LENGTH(name) AS length
+FROM 
+    people
+ORDER BY 
+    length DESC, name;
 -- lesson 2745 leven 3 Taxes 
+SELECT 
+    name,
+    ROUND(salary * 0.10, 2) AS tax
+FROM 
+    people
+WHERE 
+    salary > 3000
+ORDER BY 
+    name;
 -- lesson 2993 leven 3 Most frequent 
+SELECT amount AS most_frequent_value
+FROM value_table
+GROUP BY amount
+ORDER BY COUNT(*) DESC
+LIMIT 1 
 -- lesson 2602 leven 4 basic select 
 -- lesson 2605 leven 4 executive representatives 
 -- lesson 2611 leven 4 astion movies 
