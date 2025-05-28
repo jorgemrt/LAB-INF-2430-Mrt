@@ -1,0 +1,61 @@
+-- Select ALL
+SELECT NAME
+FROM CITY
+WHERE CountryCode = 'USA' AND Population > 120000;
+-- Revising the select query l
+-- Revising the select query ll
+-- select BY ID
+-- Japanese Cities' Attributes
+-- Japanese Cities' Names
+-- Weather observation station 1
+-- weather observation station 3
+-- Weather observation station 4
+-- Weather observation station 5
+-- Weather observation station 6
+-- Weather observation station 7
+-- Weather observation station 8
+-- Weather observation station 9
+-- Weather observation station 10
+-- Weather observation station 11
+-- Weather observation station 12
+-- Higher Than 75 Marks
+-- Employee Names
+-- Employee Salaries
+-- type of triangle
+-- the PADS
+-- Occupations
+-- Binary tree nodes 
+-- new companies
+-- Revising Aggregations-the count fanction 
+-- Revising Aggregations-the sum function
+-- Revising Aggregations-averages
+-- AVERAGE population 
+-- japan population
+-- population density difference
+-- the blunder
+-- top earnes 
+-- weather observation station 2
+-- Weather Observation Station 13
+-- Weather Observation Station 14
+-- Weather Observation Station 15
+-- Weather Observation Station 16
+-- Weather Observation Station 17   
+-- Weather Observation Station 18
+-- Weather Observation Station 19
+-- Weather Observation Station 20
+-- population census
+-- african cities 
+-- average population of each continent
+-- the report
+-- top competitors
+-- olivander's inventory
+-- challenge 
+-- constest leaderboard
+-- sql projects planning
+-- placements
+-- symmetric pairs
+-- interviews
+-- 15 days of learning sql
+-- draw the triangle 1
+-- draw the triangle 2
+-- print prime numbers
